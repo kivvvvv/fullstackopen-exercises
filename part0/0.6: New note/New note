@@ -1,0 +1,36 @@
+note over browser:
+By writing something like "test" into the text field
+and clicking the submit button.
+end note
+
+note over browser:
+Before sending the request, the browser does render
+the input value by using DOM API.
+end note
+
+note over browser:
+A request contains Request Payload of:
+{
+"content":"test",
+"date":"2020-06-19T01:50:49.180Z"
+}
+end note
+
+browser->server: HTTP POST https://fullstack-exampleapp.herokuapp.com/new_note_spa
+
+note over server:
+The server know how to parse the request from
+the given request header:
+Content-type: "application/json"
+end note
+
+note over server:
+Then parse the Request Payload into JSON format
+so that it can be kept or manipulated as its note records.
+end note
+
+server-->browser: 201 Created
+note over browser:
+As far as the code concerns it doesn't do anything for
+the response which might or might not be successful.
+end note
