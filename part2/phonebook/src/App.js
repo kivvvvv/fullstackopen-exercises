@@ -10,6 +10,8 @@ export default function App () {
 	const [newName, setNewName] = useState('')
 	const [newPhoneNumber, setNewPhoneNumber] = useState('')
 	const [searchKeyword, setSearchKeyword] = useState('')
+	const [successMessage, setSuccessMessage] = useState(null)
+	const [errorMessage, setErrorMessage] = useState(null)
 
 	useEffect(() => {
 		PersonService.fetchAll()
@@ -46,6 +48,10 @@ export default function App () {
 		PersonService.create(newPerson)
 			.then(createdPerson => {
 				setPersons(persons.concat(createdPerson))
+				setSuccessMessage(`Added ${createdPerson.name}`)
+				setTimeout(() => {
+					setSuccessMessage(null)
+				}, 5000)
 			})
 
 		setNewName('')
@@ -73,11 +79,25 @@ export default function App () {
 			.then(() => {
 				setPersons(persons.filter(person => person.id !== id))
 			})
+			.catch(() => {
+				const person = persons.find(person => person.id === id)
+				setPersons(prevState => prevState.filter(person => person.id !== id))
+				setErrorMessage(`Information of ${person.name} has been removed from server`)
+				setTimeout(() => {
+					setErrorMessage(null)
+				}, 5000)
+			})
 	}
 
 	return (
 		<div>
 			<h2>Phonebook</h2>
+			{successMessage && (
+				<div className="alert-message success">{successMessage}</div>
+			)}
+			{errorMessage && (
+				<div className="alert-message error">{errorMessage}</div>
+			)}
 			<Filter
 				handleChange={handleSearchKeywordChange}
 				searchKeyword={searchKeyword}/>
