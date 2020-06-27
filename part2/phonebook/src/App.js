@@ -1,5 +1,6 @@
 import React, {useState, useEffect} from 'react'
-import Axios from 'axios'
+
+import PersonService from './services/persons'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
@@ -11,23 +12,42 @@ export default function App () {
 	const [searchKeyword, setSearchKeyword] = useState('')
 
 	useEffect(() => {
-		Axios.get('http://localhost:3001/persons')
-			.then(response => {
-				setPersons(response.data)
+		PersonService.fetchAll()
+			.then(fetchedPersons => {
+				setPersons(fetchedPersons)
 			})
 	}, [])
 
 	const handleFormSubmit = event => {
 		event.preventDefault()
-		if (persons.map(person => person.name).includes(newName)) {
-			alert(`${newName} is already added to phonebook`)
+
+		const newPerson = {
+			name: newName,
+			number: newPhoneNumber
+		}
+
+		if (persons.map(person => person.name).includes(newPerson.name)) {
+			if (!window.confirm(`${newName} is already added to phonebook, replace the old number with a new on`)) {
+				return
+			}
+
+			const person = persons.find(person => person.name === newPerson.name)
+			PersonService.updateOnById(person.id, newPerson)
+				.then(updatedPerson => {
+					setPersons(prevState => prevState.map(person => (
+						person.id === updatedPerson.id ? updatedPerson : person
+					)))
+					setNewName('')
+					setNewPhoneNumber('')
+				})
 			return
 		}
 
-		setPersons(persons.concat({
-			name: newName,
-			number: newPhoneNumber
-		}))
+		PersonService.create(newPerson)
+			.then(createdPerson => {
+				setPersons(persons.concat(createdPerson))
+			})
+
 		setNewName('')
 		setNewPhoneNumber('')
 	}
@@ -44,10 +64,23 @@ export default function App () {
 		setNewPhoneNumber(event.target.value)
 	}
 
+	const handleDeletePersonByIdClick = (id, name) => () => {
+		if (!window.confirm(`Delete ${name} ?`)) {
+			return
+		}
+
+		PersonService.deleteOneById(id)
+			.then(() => {
+				setPersons(persons.filter(person => person.id !== id))
+			})
+	}
+
 	return (
 		<div>
 			<h2>Phonebook</h2>
-			<Filter handleChange={handleSearchKeywordChange} searchKeyword={searchKeyword}/>
+			<Filter
+				handleChange={handleSearchKeywordChange}
+				searchKeyword={searchKeyword}/>
 			<h2>add a new</h2>
 			<PersonForm
 				handleSubmit={handleFormSubmit}
@@ -56,7 +89,10 @@ export default function App () {
 				handlePhoneNumberChange={handlePhoneNumberChange}
 				newPhoneNumber={newPhoneNumber}/>
 			<h2>Numbers</h2>
-			<Persons persons={persons} searchKeyword={searchKeyword}/>
+			<Persons
+				persons={persons}
+				searchKeyword={searchKeyword}
+				onDeletePersonByIdClick={handleDeletePersonByIdClick}/>
 		</div>
 	)
 }
