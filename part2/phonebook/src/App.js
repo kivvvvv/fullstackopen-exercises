@@ -22,6 +22,7 @@ export default function App () {
 
 	const handleFormSubmit = event => {
 		event.preventDefault()
+		setErrorMessage('')
 
 		const newPerson = {
 			name: newName,
@@ -42,6 +43,9 @@ export default function App () {
 					setNewName('')
 					setNewPhoneNumber('')
 				})
+				.catch(reason => {
+					setErrorMessage(reason.response.data.error)
+				})
 			return
 		}
 
@@ -52,6 +56,9 @@ export default function App () {
 				setTimeout(() => {
 					setSuccessMessage(null)
 				}, 5000)
+			})
+			.catch(reason => {
+				setErrorMessage(reason.response.data.error)
 			})
 
 		setNewName('')
